@@ -12,3 +12,4 @@
 * **Backend:** Python, Flask, SQLite
 * **Frontend:** HTML5, CSS3, JavaScript
 * **Security & Compliance:** CSP headers, parameterized SQL queries, regex input sanitization, POPIA right-to-erasure workflows
+.
