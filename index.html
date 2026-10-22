@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMME Safety</title>
+</head>
+<body style="background-color: #090a0f; color: #f8fafc; font-family: system-ui, sans-serif; margin: 0; padding: 0;">
+
+    <!-- NAVBAR WITH HAMBURGER MENU -->
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: #0c0d12; border-bottom: 1px solid #1e293b; position: relative;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #f59e0b; font-weight: 800; letter-spacing: 2px; font-size: 1.1rem;">LUMME</span>
+        </div>
+        
+        <button onclick="toggleMenu()" style="background: none; border: none; color: #f3f4f6; font-size: 1.6rem; cursor: pointer;">
+            &#9776;
+        </button>
+
+        <!-- Dropdown Navigation -->
+        <div id="navDropdown" style="display: none; position: absolute; right: 16px; top: 50px; background-color: #111827; border: 1px solid #374151; border-radius: 8px; width: 180px; z-index: 1000;">
+            <a href="/" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Home</a>
+            <a href="/settings" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Settings</a>
+            <form action="/logout" method="POST" style="margin: 0;">
+                <button type="submit" style="width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer;">
+                    Log Out
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- MAIN BODY -->
+    <main style="max-width: 480px; margin: 0 auto; padding: 16px;">
+        
+        <!-- MAIN CENTRAL ALERT BUTTON -->
+        <section style="text-align: center; margin: 20px 0;">
+            <button id="mainAlertBtn" onclick="triggerAlert()" style="background: radial-gradient(circle, #ef4444 0%, #991b1b 100%); color: #fff; width: 160px; height: 160px; border-radius: 50%; border: 4px solid #fca5a5; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); font-size: 1.3rem; font-weight: 800; cursor: pointer;">
+                SEND<br>ALERT
+            </button>
+            <p id="statusMsg" style="color: #94a3b8; font-size: 0.8rem; margin-top: 12px;">Tap to dispatch emergency alert</p>
+        </section>
+
+        <!-- NEARBY ACTIVE HELPERS -->
+        <section style="background-color: #111827; border-radius: 12px; padding: 16px; border: 1px solid #1f2937; margin-bottom: 20px;">
+            <h3 style="color: #f3f4f6; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px;">Active Responders Nearby</h3>
+            <div id="responderList"><p style="color: #64748b; font-size: 0.8rem; margin: 0;">Locating active helpers...</p></div>
+        </section>
+
+        <!-- HELP & SUPPORT FORM -->
+        <section style="background-color: #111827; border-radius: 12px; padding: 16px; border: 1px solid #1f2937; margin-bottom: 20px;">
+            <h3 style="color: #f3f4f6; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px;">Help & Support</h3>
+            
+            <select id="supportCategory" style="width: 100%; padding: 8px; background-color: #1f2937; color: #f3f4f6; border: 1px solid #374151; border-radius: 6px; margin-bottom: 10px;">
+                <option value="Feedback">App Feedback / Suggestion</option>
+                <option value="Complaint">Account & Privacy Complaint</option>
+            </select>
+            
+            <textarea id="supportMsg" rows="3" placeholder="Write your message..." style="width: 100%; padding: 8px; background-color: #1f2937; color: #f3f4f6; border: 1px solid #374151; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px;"></textarea>
+            
+            <button onclick="submitSupport()" style="width: 100%; padding: 10px; background-color: #2563eb; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                Submit
+            </button>
+            <p id="supportStatus" style="font-size: 0.75rem; margin-top: 8px; display: none;"></p>
+        </section>
+
+    </main>
+
+    <!-- FLOATING SOS WIDGET (DISPLAYED ONLY IF PERMITTED BY USER) -->
+    <div id="homeSosWidget" style="display: none; position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
+        <button onclick="triggerAlert()" style="width: 60px; height: 60px; border-radius: 50%; background-color: #ef4444; color: #ffffff; border: 3px solid #fca5a5; font-weight: 900; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6); cursor: pointer;">
+            SOS
+        </button>
+    </div>
+
+    <script>
+        // Check if user allowed floating SOS on home screen
+        const allowHomeSos = localStorage.getItem('allow_floating_sos_home') === 'true';
+        if (allowHomeSos) {
+            document.getElementById('homeSosWidget').style.display = 'block';
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('navDropdown');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function triggerAlert() {
+            alert("Emergency Alert Dispatched!");
+        }
+
+        function submitSupport() {
+            const cat = document.getElementById('supportCategory').value;
+            const msg = document.getElementById('supportMsg').value;
+            const status = document.getElementById('supportStatus');
+
+            if (!msg.trim()) return;
+
+            fetch('/submit-support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: cat, message: msg })
+            })
+            .then(res => res.json())
+            .then(data => {
+                status.innerText = "Message sent successfully.";
+                status.style.color = "#10b981";
+                status.style.display = "block";
+                document.getElementById('supportMsg').value = '';
+            });
+        }
+
+        // Location & Responder tracking
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                fetch('/update-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: lat, longitude: lon })
+                });
+
+                fetch(`/nearby-responders?lat=${lat}&lon=${lon}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const list = document.getElementById('responderList');
+                        list.innerHTML = '';
+                        if (data.active_responders.length === 0) {
+                            list.innerHTML = '<p style="color: #64748b; font-size: 0.8rem; margin: 0;">No active helpers nearby.</p>';
+                        } else {
+                            data.active_responders.forEach(r => {
+                                list.innerHTML += `
+                                    <div style="background-color: #1f2937; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                                        <span style="font-size: 0.85rem; font-weight: 600;">${r.username}</span>
+                                        <span style="color: #f59e0b; font-size: 0.75rem;">${r.distance_km} km away</span>
+                                    </div>`;
+                            });
+                        }
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

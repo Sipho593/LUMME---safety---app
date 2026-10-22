@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - LUMME Safety</title>
+</head>
+<body style="background-color: #090a0f; color: #f8fafc; font-family: system-ui, sans-serif; margin: 0; padding: 0;">
+
+    <!-- NAVIGATION BAR -->
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background-color: #0c0d12; border-bottom: 1px solid #1e293b;">
+        <a href="/" style="color: #f3f4f6; text-decoration: none; font-weight: 600; font-size: 0.95rem;">&larr; Back to Main</a>
+        <span style="color: #f3f4f6; font-weight: 600; font-size: 0.95rem;">Settings</span>
+    </nav>
+
+    <main style="max-width: 480px; margin: 0 auto; padding: 16px;">
+
+        <!-- FLOATING SOS TOGGLE -->
+        <section style="background-color: #111827; border-radius: 12px; padding: 16px; border: 1px solid #1f2937; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="color: #f3f4f6; font-size: 0.95rem; margin: 0; font-weight: 600;">Floating SOS on Home Screen</h3>
+                    <p style="color: #9ca3af; font-size: 0.75rem; margin: 4px 0 0 0;">Allow SOS button to float over phone screen when app is minimized</p>
+                </div>
+                <input type="checkbox" id="sosHomeToggle" onchange="toggleHomeSosPermission(this.checked)" style="width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb;">
+            </div>
+            <p id="permStatus" style="font-size: 0.75rem; color: #9ca3af; margin: 10px 0 0 0; display: none;"></p>
+        </section>
+
+        <!-- HELP & SUPPORT CONTACT INFORMATION -->
+        <section style="background-color: #111827; border-radius: 12px; padding: 16px; border: 1px solid #1f2937; margin-bottom: 16px;">
+            <h3 style="color: #f3f4f6; font-size: 0.95rem; margin-top: 0; margin-bottom: 12px; font-weight: 600;">Support Contact Details</h3>
+            <p style="color: #9ca3af; font-size: 0.8rem; margin: 0 0 6px 0;">
+                Feedback: <span style="color: #f3f4f6;">{{ feedback_email }}</span>
+            </p>
+            <p style="color: #9ca3af; font-size: 0.8rem; margin: 0;">
+                Complaints: <span style="color: #f3f4f6;">{{ complaint_email }}</span>
+            </p>
+        </section>
+
+        <!-- ACCOUNT & DATA MANAGEMENT (POPIA SECTION 24) -->
+        <section style="background-color: #111827; border-radius: 12px; padding: 16px; border: 1px solid #1f2937;">
+            <h3 style="color: #f3f4f6; font-size: 0.95rem; margin-top: 0; margin-bottom: 8px; font-weight: 600;">Account Management</h3>
+            <p style="color: #9ca3af; font-size: 0.75rem; margin-bottom: 14px; line-height: 1.4;">
+                Under POPIA Section 24, you can request permanent deletion of your phone number, location logs, and personal identifiers.
+            </p>
+
+            <div style="margin-bottom: 14px;">
+                <label for="user-phone" style="display: block; color: #9ca3af; font-size: 0.75rem; margin-bottom: 6px;">Registered Phone Number:</label>
+                <input type="tel" id="user-phone" placeholder="e.g., +27821234567" style="width: 100%; padding: 10px; background-color: #1f2937; color: #f3f4f6; border: 1px solid #374151; border-radius: 6px; box-sizing: border-box; font-size: 0.85rem;">
+            </div>
+
+            <button id="purge-data-btn" style="background: none; border: 1px solid #374151; color: #f3f4f6; padding: 10px 12px; border-radius: 8px; font-size: 0.8rem; width: 100%; cursor: pointer; font-weight: 600;">
+                Delete Account & Data (31-Day Soft Delete Grace Period)
+            </button>
+
+            <p id="status-message" style="font-size: 0.75rem; margin-top: 10px; color: #9ca3af; display: none;"></p>
+        </section>
+
+    </main>
+
+    <script>
+        // Floating SOS Preference Manager
+        const toggle = document.getElementById('sosHomeToggle');
+        const permStatus = document.getElementById('permStatus');
+
+        const isAllowed = localStorage.getItem('allow_floating_sos_home') === 'true';
+        toggle.checked = isAllowed;
+
+        function toggleHomeSosPermission(enabled) {
+            localStorage.setItem('allow_floating_sos_home', enabled);
+            permStatus.innerText = enabled ? "Floating SOS enabled." : "Floating SOS disabled.";
+            permStatus.style.display = "block";
+        }
+
+        // POPIA Data Deletion Interactive Script
+        document.getElementById('purge-data-btn').addEventListener('click', async function() {
+            const phoneInput = document.getElementById('user-phone').value.trim();
+            const statusBox = document.getElementById('status-message');
+
+            if (!phoneInput) {
+                alert("Please enter your registered phone number to confirm erasure authorization.");
+                return;
+            }
+
+            const doubleCheck = confirm("Are you sure? This will permanently erase your profile, trusted contacts, and alert logs under POPIA guidelines.");
+            if (!doubleCheck) return;
+
+            statusBox.style.display = 'block';
+            statusBox.style.color = '#9ca3af';
+            statusBox.textContent = "Processing erasure request...";
+
+            try {
+                const response = await fetch('/api/user/delete-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: phoneInput })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusBox.style.color = '#10b981';
+                    statusBox.textContent = result.message;
+                    document.getElementById('user-phone').value = "";
+                } else {
+                    statusBox.style.color = '#ef4444';
+                    statusBox.textContent = "Error: " + (result.message || "Failed to process data deletion.");
+                }
+            } catch (error) {
+                console.error("Transmission error details:", error);
+                statusBox.style.color = '#ef4444';
+                statusBox.textContent = "Network error. Unable to connect to server.";
+            }
+        });
+    </script>
+</body>
+</html>

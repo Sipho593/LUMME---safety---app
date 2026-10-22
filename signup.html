@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMME | Sign Up</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="auth-body">
+
+    <div class="auth-container">
+        <header class="app-header">
+            <h1>LUMME</h1>
+            <p class="tagline">PROTECTED • CONNECTED • ALWAYS</p>
+        </header>
+
+        <div class="card auth-card">
+            <h2>Create Account</h2>
+
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="Enter your full name" required autocomplete="name">
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-phone">Phone Number</label>
+                    <input type="tel" id="signup-phone" placeholder="e.g. 0821234567" required autocomplete="tel">
+                </div>
+
+                <!-- POPIA Legal Consent Checkbox -->
+                <div class="popia-container">
+                    <label class="popia-label">
+                        <input type="checkbox" id="popia-checkbox" required>
+                        <span>
+                            I agree to the <a href="#" id="view-popia-link">POPIA Privacy Terms</a>. I consent to <strong>LUMME</strong> processing my phone number and location data strictly for emergency dispatch.
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" id="signup-submit-btn" class="btn-primary btn-full" disabled>
+                    Agree & Continue
+                </button>
+            </form>
+
+            <p class="auth-footer text-center" style="margin-top: 1rem;">
+                Already have an account? <a href="login.html" class="link-amber">Sign In</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Channel Selection Modal (Triggered after POPIA & Signup submit) -->
+    <div id="channel-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Choose Dispatch Channel</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.2rem;">
+                Select how emergency signals and verification codes will be routed to your device.
+            </p>
+            <div class="modal-actions" style="flex-direction: column; gap: 0.75rem;">
+                <button type="button" class="btn-primary btn-full" onclick="selectChannel('sms')">SMS Protocol</button>
+                <button type="button" class="btn-secondary btn-full" onclick="selectChannel('whatsapp')">WhatsApp Protocol</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPIA Information Modal -->
+    <div id="popia-info-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-height: 80vh; overflow-y: auto;">
+            <h3>POPIA & Device Permissions</h3>
+            <div style="font-size: 0.8rem; color: #cbd5e1; text-align: left; line-height: 1.5; margin: 1rem 0;">
+                <p><strong>1. Purpose Specification:</strong> Your data is used exclusively to trigger emergency response alerts.</p>
+                <br>
+                <p><strong>2. Device Permissions Required:</strong></p>
+                <ul style="padding-left: 1.2rem; margin-top: 0.4rem;">
+                    <li><strong>Location (GPS):</strong> Needed to send your exact coordinates to dispatchers during panic alerts.</li>
+                    <li><strong>Notifications:</strong> Needed to confirm dispatch status and safety updates.</li>
+                </ul>
+                <br>
+                <p><strong>3. Your Rights:</strong> You can purge your account data at any time from your Profile settings under Section 24 of POPIA.</p>
+            </div>
+            <button type="button" id="close-popia-modal" class="btn-primary btn-full">I Understand</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const signupForm = document.getElementById('signup-form');
+            const popiaCheckbox = document.getElementById('popia-checkbox');
+            const submitBtn = document.getElementById('signup-submit-btn');
+            const channelModal = document.getElementById('channel-modal');
+            
+            const popiaLink = document.getElementById('view-popia-link');
+            const popiaInfoModal = document.getElementById('popia-info-modal');
+            const closePopiaBtn = document.getElementById('close-popia-modal');
+
+            // Enforce POPIA Agreement before button activation
+            popiaCheckbox.addEventListener('change', () => {
+                submitBtn.disabled = !popiaCheckbox.checked;
+            });
+
+            // Show POPIA details modal
+            popiaLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                popiaInfoModal.classList.remove('hidden');
+            });
+
+            closePopiaBtn.addEventListener('click', () => {
+                popiaInfoModal.classList.add('hidden');
+            });
+
+            // Form Submission Handler
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!popiaCheckbox.checked) return;
+
+                // Prompt user for browser/OS permissions on first submit
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        () => console.log("GPS permission pre-authorized"),
+                        () => console.log("GPS permission pending/denied")
+                    );
+                }
+
+                channelModal.classList.remove('hidden');
+            });
+        });
+
+        function selectChannel(channel) {
+            const nameInput = document.getElementById('signup-name');
+            const phoneInput = document.getElementById('signup-phone');
+
+            if (nameInput && nameInput.value.trim()) {
+                localStorage.setItem('lumme_user_name', nameInput.value.trim());
+            }
+            if (phoneInput && phoneInput.value.trim()) {
+                localStorage.setItem('lumme_user_phone', phoneInput.value.trim());
+            }
+
+            // Flag POPIA consent as granted in local state
+            localStorage.setItem('lumme_popia_accepted', 'true');
+            localStorage.setItem('lumme_verify_channel', channel);
+
+            window.location.href = 'verify.html';
+        }
+    </script>
+</body>
+</html>

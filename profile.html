@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMME | Profile & Settings</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="auth-body">
+
+    <div class="auth-container">
+        <header class="app-header">
+            <a href="index.html" class="back-link">&larr; Dashboard</a>
+            <h1>LUMME</h1>
+            <p class="tagline">PROFILE & SECURITY</p>
+        </header>
+
+        <div class="card auth-card">
+            <div class="profile-header text-center">
+                <div class="profile-avatar" id="avatar-initials">--</div>
+                <h2 id="user-display-name">Loading...</h2>
+                <span class="delivery-badge" id="profile-status-badge">Protected</span>
+            </div>
+
+            <div class="profile-section">
+                <h3>Contact Information</h3>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="user-phone-input" placeholder="Not provided" readonly class="input-readonly">
+                </div>
+                <div class="form-group">
+                    <label>Emergency Dispatch Preferred Channel</label>
+                    <select id="profile-channel" class="input-select">
+                        <option value="sms">SMS Protocol</option>
+                        <option value="whatsapp">WhatsApp Protocol</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>Quick Actions</h3>
+                <button type="button" id="open-contact-btn" class="btn-primary btn-full" style="margin-bottom: 0.75rem;">Manage Emergency Contacts</button>
+                <button type="button" id="sign-out-btn" class="btn-secondary btn-full text-center">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reusable Add Contact Modal -->
+    <div id="contact-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Add Emergency Contact</h3>
+            <form id="add-contact-form">
+                <div class="form-group">
+                    <label for="contact-name">Name</label>
+                    <input type="text" id="contact-name" placeholder="e.g. John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-phone">Phone Number</label>
+                    <input type="tel" id="contact-phone" placeholder="e.g. 0821234567" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="close-modal-btn" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../static/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Retrieve real stored user details
+            const storedName = localStorage.getItem('lumme_user_name') || 'Registered User';
+            const storedPhone = localStorage.getItem('lumme_user_phone') || 'No phone attached';
+            const storedChannel = localStorage.getItem('lumme_verify_channel') || 'sms';
+
+            // Populate profile fields dynamically
+            const displayNameEl = document.getElementById('user-display-name');
+            const phoneInputEl = document.getElementById('user-phone-input');
+            const channelSelectEl = document.getElementById('profile-channel');
+            const avatarEl = document.getElementById('avatar-initials');
+
+            if (displayNameEl) displayNameEl.textContent = storedName;
+            if (phoneInputEl) phoneInputEl.value = storedPhone;
+            if (channelSelectEl) channelSelectEl.value = storedChannel.toLowerCase();
+
+            // Generate dynamic initials from the real name
+            if (avatarEl && storedName) {
+                const nameParts = storedName.trim().split(' ');
+                if (nameParts.length >= 2) {
+                    avatarEl.textContent = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+                } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                    avatarEl.textContent = nameParts[0].slice(0, 2).toUpperCase();
+                }
+            }
+
+            // Save updated preference channel dynamically when changed
+            if (channelSelectEl) {
+                channelSelectEl.addEventListener('change', (e) => {
+                    localStorage.setItem('lumme_verify_channel', e.target.value);
+                });
+            }
+
+            // Real sign-out logic
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('lumme_user_name');
+                    localStorage.removeItem('lumme_user_phone');
+                    window.location.href = 'login.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

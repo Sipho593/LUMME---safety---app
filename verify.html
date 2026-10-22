@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMME | Verify Phone</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="auth-body">
+
+    <div class="auth-container">
+        <header class="app-header">
+            <h1>LUMME</h1>
+            <p class="tagline">PROTECTED • CONNECTED • ALWAYS</p>
+        </header>
+
+        <div class="card auth-card text-center">
+            <h2>Verify Phone Number</h2>
+            
+            <!-- Delivery Badge and Change Link Header -->
+            <div class="verify-meta-info">
+                <span class="delivery-badge" id="active-channel-badge">SMS</span>
+                <a href="signup.html" class="edit-channel-link">Change details</a>
+            </div>
+
+            <p class="auth-subtitle" id="verify-subtitle">Enter your 4-digit code below.</p>
+
+            <form id="verify-form" action="index.html">
+                <div class="otp-container">
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                </div>
+
+                <button type="submit" class="btn-primary btn-full">Verify & Continue</button>
+            </form>
+
+            <div class="auth-footer">
+    <p id="resend-container">
+        Didn't receive code? 
+        <button type="button" id="resend-btn" class="btn-resend-link" disabled>
+            Resend in <span id="timer">35</span>s
+        </button>
+    </p>
+</div>
+        </div>
+    </div>
+
+    <script>
+        // Retrieve chosen channel and update badge/subtitle dynamically
+        const channel = localStorage.getItem('lumme_verify_channel') || 'SMS';
+        const badge = document.getElementById('active-channel-badge');
+        const subtitle = document.getElementById('verify-subtitle');
+
+        badge.textContent = channel.toUpperCase();
+        
+        // Add green accent if WhatsApp was chosen
+        if (channel.toLowerCase() === 'whatsapp') {
+            badge.classList.add('whatsapp-badge');
+        }
+
+        subtitle.textContent = `We sent a 4-digit verification code via ${channel.toUpperCase()}.`;
+
+        // OTP Boxes Auto-Focus Logic
+        const inputs = document.querySelectorAll('.otp-box');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Dynamic Resend Countdown Timer
+        let timeLeft = 30;
+        const resendBtn = document.getElementById('resend-btn');
+        let countdownInterval;
+
+        function startTimer() {
+            timeLeft = 30;
+            resendBtn.disabled = true;
+            resendBtn.classList.remove('active');
+            resendBtn.innerHTML = `Resend in <span id="timer">${timeLeft}</span>s`;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                const timerSpan = document.getElementById('timer');
+                if (timerSpan) timerSpan.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    resendBtn.classList.add('active');
+                    resendBtn.textContent = 'Resend Code';
+                }
+            }, 1000);
+        }
+
+        startTimer();
+
+        resendBtn.addEventListener('click', () => {
+            if (!resendBtn.disabled) {
+                startTimer();
+            }
+        });
+    </script>
+</body>
+</html>

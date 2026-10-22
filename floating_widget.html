@@ -1,0 +1,107 @@
+<!-- Floating Emergency Trigger Component -->
+<div id="lumme-float-widget" class="float-widget-container">
+    <button type="button" id="floating-help-btn" class="float-panic-btn" aria-label="Trigger Panic Alert">
+        <span>HELP</span>
+    </button>
+    <div class="widget-status-badge">
+        <span class="status-dot"></span> <span id="widget-user-status">Signal Ready</span>
+    </div>
+</div>
+
+<style>
+/* Floating Widget Self-Contained Overlay Styling */
+.float-widget-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 9999;
+}
+
+.float-panic-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    border: none;
+    outline: none;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.float-panic-btn:active {
+    transform: scale(0.92);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+.widget-status-badge {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    backdrop-filter: blur(6px);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    display: inline-block;
+    box-shadow: 0 0 6px #22c55e;
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const floatHelpBtn = document.getElementById('floating-help-btn');
+        const widgetStatus = document.getElementById('widget-user-status');
+
+        if (floatHelpBtn) {
+            floatHelpBtn.addEventListener('click', () => {
+                // Visual feedback animation on tap
+                floatHelpBtn.style.transform = "scale(0.92)";
+                setTimeout(() => floatHelpBtn.style.transform = "scale(1)", 150);
+
+                // Fetch real registered profile details
+                const realName = localStorage.getItem('lumme_user_name') || 'Registered User';
+                const realPhone = localStorage.getItem('lumme_user_phone') || 'No phone set';
+
+                if ("geolocation" in navigator) {
+                    widgetStatus.textContent = "Locating...";
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude.toFixed(5);
+                            const lng = position.coords.longitude.toFixed(5);
+                            
+                            widgetStatus.textContent = "Signal Ready";
+                            alert(`EMERGENCY ALERT DISPATCHED!\n\nUser: ${realName}\nContact: ${realPhone}\nCoordinates: ${lat}, ${lng}\n\nStatus: SOS broadcast sent locally.`);
+                        },
+                        (error) => {
+                            widgetStatus.textContent = "Signal Ready";
+                            alert(`EMERGENCY ALERT DISPATCHED!\n\nUser: ${realName}\nContact: ${realPhone}\nLocation: Unavailable (GPS permissions off)\n\nStatus: SOS broadcast sent locally.`);
+                        },
+                        { timeout: 10000, enableHighAccuracy: true }
+                    );
+                } else {
+                    alert(`EMERGENCY ALERT DISPATCHED!\n\nUser: ${realName}\nContact: ${realPhone}\n\nStatus: SOS broadcast sent locally.`);
+                }
+            });
+        }
+    });
+</script>

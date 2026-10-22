@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMME | Safety Chat</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="auth-body">
+
+    <div class="auth-container chat-container">
+        <header class="app-header">
+            <a href="index.html" class="back-link">&larr; Exit Chat</a>
+            <h1>LUMME CHAT</h1>
+            <p class="tagline">SECURE ENCRYPTED CHANNEL</p>
+        </header>
+
+        <div class="card auth-card chat-box">
+            <div id="chat-messages" class="chat-messages">
+                <div class="message system-msg">
+                    <span>System initialized. Secure channel active.</span>
+                </div>
+            </div>
+
+            <form id="chat-form" class="chat-input-row">
+                <input type="text" id="chat-input" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn-primary btn-pill-sm">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Retrieve real stored user details
+            const userName = localStorage.getItem('lumme_user_name') || 'You';
+            const chatMessages = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+
+            // Load persistent chat history from localStorage
+            let savedChat = JSON.parse(localStorage.getItem('lumme_chat_history') || '[]');
+
+            if (savedChat.length === 0) {
+                // Initial system greeting if chat is empty
+                appendMessage('LUMME Bot', `Hello ${userName}, type "HELP" or send a message to log an event.`, 'incoming-msg');
+            } else {
+                // Render existing history
+                savedChat.forEach(msg => {
+                    appendMessage(msg.sender, msg.text, msg.type, false);
+                });
+            }
+
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                // 1. Render and store real user message
+                appendMessage(userName, text, 'outgoing-msg');
+                chatInput.value = '';
+
+                // 2. Automated response based on user input
+                setTimeout(() => {
+                    let botReply = `Received: "${text}". Standing by.`;
+                    if (text.toUpperCase() === 'HELP') {
+                        botReply = `EMERGENCY ALERT: Dispatch signal queued for ${userName}. Stay calm.`;
+                    }
+                    appendMessage('LUMME Bot', botReply, 'incoming-msg');
+                }, 700);
+            });
+
+            function appendMessage(sender, text, type, save = true) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${type}`;
+
+                if (type === 'outgoing-msg') {
+                    msgDiv.innerHTML = `<p>${text}</p>`;
+                } else {
+                    msgDiv.innerHTML = `<strong>${sender}:</strong><p>${text}</p>`;
+                }
+
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                if (save) {
+                    savedChat.push({ sender, text, type });
+                    localStorage.setItem('lumme_chat_history', JSON.stringify(savedChat));
+                }
+            }
+        });
+    </script>
+</body>
+</html>
