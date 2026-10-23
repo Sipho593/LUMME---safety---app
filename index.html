@@ -19,13 +19,12 @@
 
         <!-- Dropdown Navigation -->
         <div id="navDropdown" style="display: none; position: absolute; right: 16px; top: 50px; background-color: #111827; border: 1px solid #374151; border-radius: 8px; width: 180px; z-index: 1000;">
-            <a href="/" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Home</a>
-            <a href="/settings" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Settings</a>
-            <form action="/logout" method="POST" style="margin: 0;">
-                <button type="submit" style="width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer;">
-                    Log Out
-                </button>
-            </form>
+            <a href="index.html" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Home</a>
+            <a href="profile.html" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Profile</a>
+            <a href="chat.html" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Chat</a>
+            <a href="search.html" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Search</a>
+            <a href="settings.html" style="display: block; padding: 12px 16px; color: #f3f4f6; text-decoration: none; border-bottom: 1px solid #1f2937;">Settings</a>
+            <a href="login.html" style="display: block; padding: 12px 16px; color: #ef4444; font-weight: 600; text-decoration: none;">Log Out / Login</a>
         </div>
     </nav>
 
@@ -65,7 +64,7 @@
 
     </main>
 
-    <!-- FLOATING SOS WIDGET (DISPLAYED ONLY IF PERMITTED BY USER) -->
+    <!-- FLOATING SOS WIDGET -->
     <div id="homeSosWidget" style="display: none; position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
         <button onclick="triggerAlert()" style="width: 60px; height: 60px; border-radius: 50%; background-color: #ef4444; color: #ffffff; border: 3px solid #fca5a5; font-weight: 900; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6); cursor: pointer;">
             SOS
@@ -73,7 +72,7 @@
     </div>
 
     <script>
-        // Check if user allowed floating SOS on home screen
+        // Check floating SOS setting
         const allowHomeSos = localStorage.getItem('allow_floating_sos_home') === 'true';
         if (allowHomeSos) {
             document.getElementById('homeSosWidget').style.display = 'block';
@@ -106,6 +105,13 @@
                 status.style.color = "#10b981";
                 status.style.display = "block";
                 document.getElementById('supportMsg').value = '';
+            })
+            .catch(() => {
+                // Static demo fallback for GitHub Pages
+                status.innerText = "Message submitted (Demo Mode).";
+                status.style.color = "#10b981";
+                status.style.display = "block";
+                document.getElementById('supportMsg').value = '';
             });
         }
 
@@ -119,14 +125,14 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ latitude: lat, longitude: lon })
-                });
+                }).catch(() => {});
 
                 fetch(`/nearby-responders?lat=${lat}&lon=${lon}`)
                     .then(res => res.json())
                     .then(data => {
                         const list = document.getElementById('responderList');
                         list.innerHTML = '';
-                        if (data.active_responders.length === 0) {
+                        if (!data.active_responders || data.active_responders.length === 0) {
                             list.innerHTML = '<p style="color: #64748b; font-size: 0.8rem; margin: 0;">No active helpers nearby.</p>';
                         } else {
                             data.active_responders.forEach(r => {
@@ -137,6 +143,9 @@
                                     </div>`;
                             });
                         }
+                    })
+                    .catch(() => {
+                        document.getElementById('responderList').innerHTML = '<p style="color: #64748b; font-size: 0.8rem; margin: 0;">Demo Mode: Active responders scan complete.</p>';
                     });
             });
         }
